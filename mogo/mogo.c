@@ -2,6 +2,31 @@
 #include <bcon.h>
 #include <mongo.h>
 #include "mogo.h"
+
+typedef enum _logger_level_t
+{
+	LOGGER_ERROR,
+	LOGGER_CRITICAL,
+	LOGGER_WARNING,
+	LOGGER_MESSAGE,
+	LOGGER_INFO,
+	LOGGER_DEBUG,
+	LOGGER_TRACE,
+}logger_level_t;
+
+
+
+#define DEBUG(fmt, ...)
+	fprintf(stderr, fmt, ##__VA_ARGS__)
+
+void _logger(const char *file, const char *func,
+				int *line, long level, 
+				const char *fmt, ...)
+
+#define LOG(level, fmt, ...)
+	_logger(__FILE__, __func__, __LINE__,
+			level, fmt, ## __VA_ARGS__)	
+
 //process convert data to type of bson object
 typedef int (*encode_fn)(const void *data, bson_t *doc);
 //build id from the data, set it to doc
@@ -39,8 +64,32 @@ struct _mogo_ctx_t{
 	mogo_batch_t        batches[MOG_BULK_LAST];
 }mogo_ctx_t;
 
+void mongoc_logger_wrapper(mongoc_log_level_t log_level,
+							const char *log_domain,
+							const char *message,
+							void *user_data)
+{
+	switch(log_level)
+	{
+		case MONGOC_LOG_LEVEL_ERROR:
+		case MONGOC_LOG_LEVEL_CRITICAL:
+		case MONGOC_LOG_LEVEL_WARNING:
+			break;
+		case MONGOC_LOG_LEVEL_MESSAGE:
+		case MONGOC_LOG_LEVEL_INFO:
+			break;
+		case MONGOC_LOG_LEVEL_DEBUG:
+		case MONGOC_LOG_LEVEL_TRACE:
+			break;
+		default:
+			break;
+	}
+	
+}
+
 int mogo_init(void)
 {
+	mongoc_log_set_handler(mongoc_logger_wrapper, NULL);
 	//pthread_create();
 	//pthread_cond_wait();
 	return VNI_SUCCESS;
